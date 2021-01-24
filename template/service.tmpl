@@ -1,0 +1,22 @@
+package server
+
+import (
+	"context"
+	{{if .use_model }}"{{.model_pkg}}"{{end}}
+)
+
+{{range $service_def := .rpc_services }}
+type {{service_name $service_def.name }} interface {
+{{range $function_def := $service_def.functions }}
+    {{$function_def.method_name}}(ctx context.Context , {{$function_def.param_list}}) ({{if $function_def.has_ret}}{{$function_def.result}},{{end}}err error)
+{{end}}
+}
+{{end}}
+
+
+
+
+
+
+
+

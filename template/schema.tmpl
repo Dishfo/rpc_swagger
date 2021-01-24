@@ -1,0 +1,30 @@
+{{define "structField"}}
+{{.name}} {{template "schemaType" .}}'json:"
+{{- template "json_tag" . }}"'
+{{end}}}
+
+{{define "json_tag" }}
+{{- .definition_name }}
+{{end}}
+
+{{define "schemaType"}}
+{{if .is_nullable}}*{{end}}{{.go_type}}
+{{end}}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

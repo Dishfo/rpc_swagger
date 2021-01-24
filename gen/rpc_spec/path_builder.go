@@ -1,0 +1,229 @@
+package rpc_spec
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"reflect"
+	"strings"
+)
+
+type PathSpecBuilder struct {
+	center *SpecBuilder
+
+	serviceName string
+	methodName  string
+	paramsTypes []reflect.Type
+	paramsNames []string
+	resultType  reflect.Type
+
+	paramFields []FieldSpec
+	resultSpec  TypeSpec
+
+	errs []error
+
+	result PathSpec
+}
+
+func (b *PathSpecBuilder) Build() PathSpec {
+	b.result.Method = b.methodName
+	b.result.ServiceName = b.serviceName
+	b.result.RpcServiceMethod = fmt.Sprintf("%s_%s", b.serviceName, parselizeMethodName(b.methodName))
+	b.result.RpcPath = fmt.Sprintf("%s/%s", b.serviceName, b.methodName)
+
+	b.result.ParamSpec.ModelName = fmt.Sprintf("%s%sParamList", b.serviceName, b.methodName)
+	b.result.ParamSpec.Properties = b.paramFields
+
+	b.center.AppendDefinitions(b.result.ParamSpec)
+	if b.resultType != nil {
+		b.result.ResultList = b.resultSpec
+	}
+
+	b.center.AppendPath(b.result)
+
+	return b.result
+}
+
+func (b *PathSpecBuilder) IsValid() bool {
+	if len(b.serviceName) == 0 {
+		return false
+	}
+
+	if len(b.methodName) == 0 {
+		return false
+	}
+
+	if b.methodName[0] < 'A' || b.methodName[0] > 'Z' {
+		return false
+	}
+	log.Println(b.errs)
+	return len(b.errs) == 0
+}
+
+func (b *PathSpecBuilder) SetServiceName(service string) *PathSpecBuilder {
+	b.serviceName = service
+	return b
+}
+
+func (b *PathSpecBuilder) SetMethod(method string) *PathSpecBuilder {
+	b.methodName = method
+	return b
+}
+
+func (b *PathSpecBuilder) AppendParam(name string, typ reflect.Type) *PathSpecBuilder {
+	b.paramsNames = append(b.paramsNames, name)
+	b.paramsTypes = append(b.paramsTypes, typ)
+
+	//parse current params,get type of it ,if
+	// it's struct should create definition spec and register to center
+	b.analysisParamType(name, typ)
+	return b
+}
+
+func (b *PathSpecBuilder) SetResult(name string, typ reflect.Type) *PathSpecBuilder {
+	b.resultType = typ
+	ctx := AnalysisContext{
+		Ctx:       context.TODO(),
+		IsPointer: false,
+
+		NeedRegisterModel: true,
+		CheckModelExist:   b.checkDefinitionExist,
+
+		AnalysisProxy: b.analysisType,
+	}
+
+	typeSpec, err := b.analysisType(ctx, typ)
+	if err != nil {
+		b.addErr(err)
+		return b
+	}
+	b.resultSpec = typeSpec
+	return b
+}
+
+func (b *PathSpecBuilder) addErr(err error) {
+	if err != nil {
+		b.errs = append(b.errs, err)
+	}
+
+}
+
+const (
+	off1 = 'a' - byte('A')
+)
+
+func parselizeMethodName(method string) string {
+	var builder strings.Builder
+	builder.WriteByte(method[0] + byte(off1))
+	builder.WriteString(method[1:])
+	return builder.String()
+}
+
+type AnalysisContext struct {
+	Ctx       context.Context
+	Anonymous bool
+	IsPointer bool
+
+	NeedRegisterModel bool
+	CheckModelExist   func(string) bool //can't be nil if NeedRegisterModel equal true
+
+	//for more complex inner model
+	AnalysisProxy func(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error)
+}
+
+type TypeConvert interface {
+	GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error)
+}
+
+func (b *PathSpecBuilder) checkDefinitionExist(name string) bool {
+	return b.center.ExistDefinition(name)
+}
+
+func (b *PathSpecBuilder) analysisType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
+	typKind := typ.Kind()
+
+	var realType reflect.Type = typ
+	if typKind == reflect.Ptr {
+		ctx.IsPointer = true
+		realType = indirectType(typ)
+	}
+
+	kindType := typeMerge(typ.Kind())
+	conv := builtinTypeConvert[kindType]
+	if conv == nil {
+		return TypeSpec{}, errors.New(fmt.Sprintf("can't handle this type : %s", typ.String()))
+	}
+
+	typeSpec, err := conv.GetSwaggerType(ctx, realType)
+
+	if err != nil {
+		log.Printf("can't handle this case %s %s", err.Error(), typ.String())
+		return TypeSpec{}, err
+	}
+	typeSpec.Pointer = ctx.IsPointer
+
+	if typeSpec.IsReference && ctx.NeedRegisterModel {
+		if typeSpec.ReferenceType != nil && !b.center.ExistDefinition(typeSpec.SwaggerType) {
+			b.center.AppendDefinitions(*typeSpec.ReferenceType)
+		}
+	}
+
+	return typeSpec, nil
+}
+
+func (b *PathSpecBuilder) analysisParamType(name string, typ reflect.Type) {
+
+	ctx := AnalysisContext{
+		Ctx:       context.TODO(),
+		IsPointer: false,
+
+		NeedRegisterModel: true,
+		CheckModelExist:   b.checkDefinitionExist,
+
+		AnalysisProxy: b.analysisType,
+	}
+
+	typeSpec, err := b.analysisType(ctx, typ)
+	if err != nil {
+		b.errs = append(b.errs, err)
+		return
+	}
+	fieldSpec := FieldSpec{
+		TypeSpec: typeSpec,
+		Name:     name,
+	}
+	b.paramFields = append(b.paramFields, fieldSpec)
+}
+
+var (
+	builtinTypeConvert = map[int]TypeConvert{
+		0: &NumberConvert{},    //integer
+		1: &StringConvert{},    //string
+		2: nil,                 //array
+		3: nil,                 //map
+		4: &InterfaceConvert{}, //interface
+		5: &StructConvert{},    //struct
+		6: &BoolConvert{},      //bool
+	}
+)
+
+func typeMerge(kind reflect.Kind) int {
+	switch {
+	case reflect.String == kind:
+		return 1
+	case kind >= reflect.Int && kind <= reflect.Float64:
+		return 0
+	case reflect.Bool == kind:
+		return 6
+	case reflect.Array == kind || reflect.Slice == kind:
+		return 2
+	case reflect.Map == kind:
+		return 3
+	case reflect.Interface == kind:
+		return 4
+	case reflect.Struct == kind:
+		return 5
+	}
+	return -1
+}

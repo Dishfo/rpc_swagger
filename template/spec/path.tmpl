@@ -1,0 +1,41 @@
+{{- define "path_result_type" -}}
+          {{- if .IsPrimitive }}
+            type: {{.SwaggerType}}
+          {{- else if .IsReference }}
+            $ref: '#/definitions/{{.SwaggerType}}'
+          {{- end}}
+          {{- if .HasFormat }}
+            format: {{.Format}}
+          {{- end}}
+          {{- if .Pointer }}
+            x-nullable: true
+          {{- end}}
+{{- end }}
+
+{{ define "path" }}
+paths:
+{{- range .Paths}}
+  /rpc/{{.RpcPath}}:
+    post:
+      consumes:
+        - application/json
+      operationId: {{.RpcServiceMethod}}
+      parameters:
+        - in: body
+          name: ParamList
+          required: true
+          schema:
+            $ref: '#/definitions/{{.ParamSpec.ModelName}}'
+      responses:
+        '200':
+          description: success
+          schema:
+            {{- template "path_result_type" .ResultList }}
+
+      tags:
+        - {{.ServiceName}}
+      produces:
+        - application/json
+
+{{end}}
+{{end}}

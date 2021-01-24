@@ -1,0 +1,41 @@
+package model
+
+{{if .extra_import }}
+import (
+
+)
+{{end}}
+
+type {{.model_name}} struct {
+{{range .properties}}
+{{template "structField" .}}
+{{end}}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

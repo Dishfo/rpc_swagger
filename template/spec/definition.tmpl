@@ -1,0 +1,56 @@
+{{- define "definition_field_type" -}}
+      {{- if .IsPrimitive }}
+        type: {{.SwaggerType}}
+      {{- else if .IsReference }}
+        $ref: '#/definitions/{{.SwaggerType}}'
+      {{- end}}
+      {{- if .HasFormat }}
+        format: {{.Format}}
+      {{- end}}
+      {{- if .Pointer }}
+        x-nullable: true
+      {{- end}}
+{{- end }}
+
+{{define "definition" }}
+definitions:
+{{- range .Definitions }}
+  {{ .ModelName}}:
+    properties:
+      {{- range  .Properties}}
+      {{.Name}}:
+        {{- template "definition_field_type" . -}}
+      {{- end}}
+{{ end}}
+
+{{ end}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

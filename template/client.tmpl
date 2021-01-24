@@ -1,0 +1,70 @@
+package client
+
+import (
+	"context"
+	"git.uidev.tools/unifi/uid.gopkg/jsonrpc/rpc"
+	{{if .use_model }}"{{.model_pkg}}"{{end}}
+)
+
+type {{.server_name}}RpcClient interface {
+    {{range $call_function := .call_functions}}
+    {{$call_function.function_name}}(ctx context.Context,{{$call_function.param_list}}) ({{if $call_function.has_ret}}{{$call_function.result}},{{end}}err error)
+    {{end}}
+}
+
+type {{.server_name}}RpcClientImpl struct {
+	rpcCli *rpc.Client
+}
+
+{{range $call_function := .call_functions}}
+func (s *{{$.server_name}}RpcClientImpl) {{$call_function.function_name}} (ctx context,{{$call_function.param_list}}) ({{if $call_function.has_ret}}{{$call_function.result}},{{end}}err error) {
+    err = s.rpcCli.CallContext(ctx,{{point_to $call_function.ret}},{{$call_function.method}},{{$call_function.call_paramed}})
+    return
+}
+{{end}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
