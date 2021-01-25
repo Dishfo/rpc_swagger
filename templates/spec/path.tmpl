@@ -8,10 +8,10 @@
             {{.PrefixSpace}}additionalProperties:
           {{- end}}
           {{- if .IsMap}}
-            {{- template "definition_field_type" .ItemSpec -}}
+            {{- template "path_result_type" .ItemSpec -}}
           {{- else if eq .SwaggerType "array"}}
             {{.PrefixSpace}}items:
-             {{- template "definition_field_type" .ItemSpec -}}
+             {{- template "path_result_type" .ItemSpec -}}
           {{- end }}
           {{- if .HasFormat }}
             {{.PrefixSpace}}format: {{.Format}}
@@ -38,7 +38,7 @@ paths:
       responses:
         '200':
           description: success
-          {{- if eq .ResultList nil }}
+          {{- if .HasRes }}
           schema:
             {{- template "path_result_type" .ResultList }}
           {{- end }}

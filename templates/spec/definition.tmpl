@@ -19,6 +19,12 @@
       {{- if .Pointer }}
         {{.PrefixSpace}}x-nullable: true
       {{- end}}
+      {{- if .CustomMarshal }}
+        {{.PrefixSpace}}x-marshal: true
+      {{- end}}
+      {{- if .CustomUnMarshal }}
+        {{.PrefixSpace}}x-unmarshal: true
+      {{- end}}
 {{- end }}
 
 

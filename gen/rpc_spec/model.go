@@ -9,6 +9,7 @@ type PathSpec struct {
 	RpcServiceMethod string
 	ParamSpec        DefinitionSpec
 	ResultList       *TypeSpec
+	HasRes           bool
 }
 
 type DefinitionSpec struct {
@@ -38,6 +39,9 @@ type TypeSpec struct {
 	PrefixSpace string
 
 	ReferenceType *DefinitionSpec
+
+	CustomMarshal   bool
+	CustomUnMarshal bool
 }
 
 type Spec struct {

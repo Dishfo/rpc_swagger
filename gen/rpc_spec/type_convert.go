@@ -67,6 +67,36 @@ type StructConvert struct {
 //TODO need handle Anonymous struct
 func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
 	var ret TypeSpec
+
+	var isStringer = isStringer(typ)
+
+	if isStringer && ctx.InOrOut == serializeOut {
+		ret.SwaggerType = "string"
+		ret.IsPrimitive = true
+		return ret, nil
+	}
+
+	ismarshal := isMarshal(typ)
+	isUnMarshal := isUnMarshal(typ)
+
+	if ctx.InOrOut == serializeOut && ismarshal {
+		ret.SwaggerType = "object"
+		ret.CustomMarshal = true
+		ret.IsPrimitive = true
+
+	}
+
+	if ctx.InOrOut == serializeIn && isUnMarshal {
+		ret.SwaggerType = "object"
+		ret.CustomUnMarshal = true
+		ret.IsPrimitive = true
+
+	}
+
+	if isUnMarshal || ismarshal {
+		return ret, nil
+	}
+
 	if typ.String() == "time.Time" {
 		ret.Format = "date-time"
 		ret.HasFormat = true

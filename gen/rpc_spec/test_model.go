@@ -16,6 +16,14 @@ type TestT struct {
 	Time     time.Time              `json:"time"`
 }
 
+//func (t TestT) String() string {
+//	panic("implement me")
+//}
+
+func (t TestT) MarshalJSON() ([]byte, error) {
+	panic("implement me")
+}
+
 func (s *TestService) GetByID(companyId, id string) (TestT, error) {
 
 	return TestT{}, nil

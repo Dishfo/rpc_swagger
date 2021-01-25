@@ -38,6 +38,7 @@ func (b *PathSpecBuilder) Build() PathSpec {
 	b.center.AppendDefinitions(b.result.ParamSpec)
 	if b.resultType != nil {
 		b.result.ResultList = &b.resultSpec
+		b.result.HasRes = true
 	}
 
 	b.center.AppendPath(b.result)
@@ -77,19 +78,21 @@ func (b *PathSpecBuilder) AppendParam(name string, typ reflect.Type) *PathSpecBu
 
 	//parse current params,get type of it ,if
 	// it's struct should create definition spec and register to center
+
 	b.analysisParamType(name, typ)
 	return b
 }
 
 func (b *PathSpecBuilder) SetResult(name string, typ reflect.Type) *PathSpecBuilder {
 	b.resultType = typ
+	log.Println("value nil ", b.resultType)
 	if typ == nil {
 		return b
 	}
 	ctx := AnalysisContext{
-		Ctx:       context.TODO(),
-		IsPointer: false,
-
+		Ctx:               context.TODO(),
+		IsPointer:         false,
+		InOrOut:           serializeOut,
 		NeedRegisterModel: true,
 		CheckModelExist:   b.checkDefinitionExist,
 
@@ -123,10 +126,18 @@ func parselizeMethodName(method string) string {
 	return builder.String()
 }
 
+type serializeType int
+
+const (
+	serializeIn serializeType = iota + 1
+	serializeOut
+)
+
 type AnalysisContext struct {
 	Ctx       context.Context
 	Anonymous bool
 	IsPointer bool
+	InOrOut   serializeType //1 ==in 2 == out
 
 	NeedRegisterModel bool
 	CheckModelExist   func(string) bool //can't be nil if NeedRegisterModel equal true
@@ -180,9 +191,12 @@ func (b *PathSpecBuilder) analysisType(ctx AnalysisContext, typ reflect.Type) (T
 
 func (b *PathSpecBuilder) analysisParamType(name string, typ reflect.Type) {
 
+	//if typ is umMarshal need set this type as x-marshal
+
 	ctx := AnalysisContext{
 		Ctx:       context.TODO(),
 		IsPointer: false,
+		InOrOut:   serializeIn,
 
 		NeedRegisterModel: true,
 		CheckModelExist:   b.checkDefinitionExist,

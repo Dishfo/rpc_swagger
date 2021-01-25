@@ -27,6 +27,9 @@ paths:
       responses:
         '200':
           description: success
+          schema:
+            type: object
+            x-marshal: true
 
       tags:
         - test
@@ -73,26 +76,6 @@ definitions:
         type: string
       id:
         type: string
-
-  rpcspecTestT:
-    properties:
-      Name:
-        type: string
-      Age:
-        type: integer
-        format: int32
-      Value:
-        type: object
-        additionalProperties:
-          type: object
-      ArrayVal:
-        type: array
-        items:
-          type: integer
-          format: int32
-      Time:
-        type: string
-        format: date-time
 
 
 
