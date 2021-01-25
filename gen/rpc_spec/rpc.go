@@ -2,6 +2,7 @@ package rpc_spec
 
 import (
 	"bytes"
+	"github.com/Dishfo/rpc_swagger/templates"
 	"github.com/Dishfo/wire_dao/gen_dao"
 	"html/template"
 	"io/ioutil"
@@ -191,11 +192,25 @@ func (a *RpcServiceAnalysis) AppointService(services ...ServiceRegister) (err er
 func (a *RpcServiceAnalysis) Render() (err error) {
 	a.Spec.ServerName = a.opt.ServerName
 
-	tmplInst, err := template.ParseFiles("../../template/spec/spec.tmpl",
-		"../../template/spec/definition.tmpl",
-		"../../template/spec/path.tmpl")
+	tmplInst := template.New("set")
+	//tt.Parse()
+	//tmplInst, err := templates.ParseFiles("../../templates/spec/spec.tmpl",
+	//	"../../templates/spec/definition.tmpl",
+	//	"../../templates/spec/path.tmpl")
+
+	tmplInst, err = tmplInst.Parse(string(templates.MustAsset("spec/spec.tmpl")))
 	if err != nil {
-		log.Printf("parse template file failed :%s", err.Error())
+		log.Printf("parse templates file failed :%s", err.Error())
+		return err
+	}
+	tmplInst, err = tmplInst.Parse(string(templates.MustAsset("spec/definition.tmpl")))
+	if err != nil {
+		log.Printf("parse templates file failed :%s", err.Error())
+		return err
+	}
+	tmplInst, err = tmplInst.Parse(string(templates.MustAsset("spec/path.tmpl")))
+	if err != nil {
+		log.Printf("parse templates file failed :%s", err.Error())
 		return err
 	}
 
@@ -203,7 +218,7 @@ func (a *RpcServiceAnalysis) Render() (err error) {
 
 	err = tmplInst.Execute(&buffer, a.Spec)
 	if err != nil {
-		log.Printf("render template  failed :%s", err.Error())
+		log.Printf("render templates  failed :%s", err.Error())
 		return err
 	}
 

@@ -41,13 +41,6 @@ paths:
 
 
 definitions:
-  testGetByIDParamList:
-    properties:
-      companyId:
-        type: string
-      id:
-        type: string
-
   rpcspecTestT:
     properties:
       Name:
@@ -64,6 +57,13 @@ definitions:
         items:
           type: integer
           format: int32
+
+  testGetByIDParamList:
+    properties:
+      companyId:
+        type: string
+      id:
+        type: string
 
 
 
