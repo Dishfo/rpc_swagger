@@ -10,7 +10,7 @@
       {{- if .IsMap}}
         {{- template "definition_field_type" .ItemSpec -}}
       {{- else if eq .SwaggerType "array"}}
-        items:
+        {{.PrefixSpace}}items:
          {{- template "definition_field_type" .ItemSpec -}}
       {{- end }}
       {{- if .HasFormat }}

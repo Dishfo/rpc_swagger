@@ -37,7 +37,7 @@ func (b *PathSpecBuilder) Build() PathSpec {
 
 	b.center.AppendDefinitions(b.result.ParamSpec)
 	if b.resultType != nil {
-		b.result.ResultList = b.resultSpec
+		b.result.ResultList = &b.resultSpec
 	}
 
 	b.center.AppendPath(b.result)
@@ -83,6 +83,9 @@ func (b *PathSpecBuilder) AppendParam(name string, typ reflect.Type) *PathSpecBu
 
 func (b *PathSpecBuilder) SetResult(name string, typ reflect.Type) *PathSpecBuilder {
 	b.resultType = typ
+	if typ == nil {
+		return b
+	}
 	ctx := AnalysisContext{
 		Ctx:       context.TODO(),
 		IsPointer: false,
@@ -151,7 +154,7 @@ func (b *PathSpecBuilder) analysisType(ctx AnalysisContext, typ reflect.Type) (T
 		realType = indirectType(typ)
 	}
 
-	kindType := typeMerge(typ.Kind())
+	kindType := typeMerge(realType.Kind())
 	conv := builtinTypeConvert[kindType]
 	if conv == nil {
 		return TypeSpec{}, errors.New(fmt.Sprintf("can't handle this type : %s", typ.String()))

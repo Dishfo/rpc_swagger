@@ -46,7 +46,7 @@ type BoolConvert struct {
 func (b *BoolConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
 	var ret TypeSpec
 	ret.IsPrimitive = true
-	ret.SwaggerType = "bool"
+	ret.SwaggerType = "boolean"
 	return ret, nil
 }
 
@@ -67,10 +67,11 @@ type StructConvert struct {
 //TODO need handle Anonymous struct
 func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
 	var ret TypeSpec
-	if typ.Name() == "time.Time" {
+	if typ.String() == "time.Time" {
 		ret.Format = "date-time"
 		ret.HasFormat = true
 		ret.SwaggerType = "string"
+		ret.IsPrimitive = true
 		return ret, nil
 	}
 

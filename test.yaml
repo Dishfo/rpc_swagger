@@ -27,8 +27,27 @@ paths:
       responses:
         '200':
           description: success
+
+      tags:
+        - test
+      produces:
+        - application/json
+
+
+  /rpc/test/GetByIDs:
+    post:
+      consumes:
+        - application/json
+      operationId: test_getByIDs
+      parameters:
+        - in: body
+          name: ParamList
+          required: true
           schema:
-            $ref: '#/definitions/rpcspecTestT'
+            $ref: '#/definitions/testGetByIDsParamList'
+      responses:
+        '200':
+          description: success
 
       tags:
         - test
@@ -41,6 +60,20 @@ paths:
 
 
 definitions:
+  testGetByIDParamList:
+    properties:
+      companyId:
+        type: string
+      id:
+        type: string
+
+  testGetByIDsParamList:
+    properties:
+      companyId:
+        type: string
+      id:
+        type: string
+
   rpcspecTestT:
     properties:
       Name:
@@ -57,13 +90,9 @@ definitions:
         items:
           type: integer
           format: int32
-
-  testGetByIDParamList:
-    properties:
-      companyId:
+      Time:
         type: string
-      id:
-        type: string
+        format: date-time
 
 
 

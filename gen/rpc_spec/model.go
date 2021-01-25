@@ -8,7 +8,7 @@ type PathSpec struct {
 	RpcPath          string
 	RpcServiceMethod string
 	ParamSpec        DefinitionSpec
-	ResultList       TypeSpec
+	ResultList       *TypeSpec
 }
 
 type DefinitionSpec struct {
