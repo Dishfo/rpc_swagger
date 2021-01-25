@@ -41,6 +41,13 @@ paths:
 
 
 definitions:
+  testGetByIDParamList:
+    properties:
+      companyId:
+        type: string
+      id:
+        type: string
+
   rpcspecTestT:
     properties:
       Name:
@@ -48,13 +55,15 @@ definitions:
       Age:
         type: integer
         format: int32
-
-  testGetByIDParamList:
-    properties:
-      companyId:
-        type: string
-      id:
-        type: string
+      Value:
+        type: object
+        additionalProperties:
+          type: object
+      ArrayVal:
+        type: array
+        items:
+          type: integer
+          format: int32
 
 
 

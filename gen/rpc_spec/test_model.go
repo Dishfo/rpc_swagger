@@ -5,10 +5,12 @@ type TestService struct {
 }
 
 type TestT struct {
-	Name  string `json:"name"`
-	Age   int    `json:"age"`
-	Email string `json:"-"`
-	phone string
+	Name     string `json:"name"`
+	Age      int    `json:"age"`
+	Email    string `json:"-"`
+	phone    string
+	Value    map[string]interface{} `json:"value"`
+	ArrayVal []int                  `json:"array_val"`
 }
 
 func (s *TestService) GetByID(companyId, id string) (TestT, error) {

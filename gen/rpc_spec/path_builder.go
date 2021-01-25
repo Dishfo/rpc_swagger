@@ -130,6 +130,8 @@ type AnalysisContext struct {
 
 	//for more complex inner model
 	AnalysisProxy func(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error)
+
+	PrefixSpace string
 }
 
 type TypeConvert interface {
@@ -168,6 +170,7 @@ func (b *PathSpecBuilder) analysisType(ctx AnalysisContext, typ reflect.Type) (T
 			b.center.AppendDefinitions(*typeSpec.ReferenceType)
 		}
 	}
+	typeSpec.PrefixSpace = ctx.PrefixSpace
 
 	return typeSpec, nil
 }
@@ -200,8 +203,8 @@ var (
 	builtinTypeConvert = map[int]TypeConvert{
 		0: &NumberConvert{},    //integer
 		1: &StringConvert{},    //string
-		2: nil,                 //array
-		3: nil,                 //map
+		2: &ArrayConvert{},     //array
+		3: &MapConvert{},       //map
 		4: &InterfaceConvert{}, //interface
 		5: &StructConvert{},    //struct
 		6: &BoolConvert{},      //bool

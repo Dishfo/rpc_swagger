@@ -123,11 +123,12 @@ func (m *MapConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (Type
 	}
 
 	elemTyp := typ.Elem()
-	ret.IsPrimitive = true
+	ret.IsPrimitive = false
 	ret.IsMap = true
 	ret.SwaggerType = "object"
-
-	itemTypeSpec, err := ctx.AnalysisProxy(ctx, elemTyp)
+	newCtx := ctx
+	newCtx.PrefixSpace = ctx.PrefixSpace + "  "
+	itemTypeSpec, err := ctx.AnalysisProxy(newCtx, elemTyp)
 	if err != nil {
 		return TypeSpec{}, err
 	}
@@ -154,8 +155,10 @@ func (a *ArrayConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (Ty
 	elemTyp := typ.Elem()
 	ret.IsPrimitive = true
 	ret.SwaggerType = "array"
+	newCtx := ctx
+	newCtx.PrefixSpace = ctx.PrefixSpace + "  "
 
-	itemTypeSpec, err := ctx.AnalysisProxy(ctx, elemTyp)
+	itemTypeSpec, err := ctx.AnalysisProxy(newCtx, elemTyp)
 	if err != nil {
 		return TypeSpec{}, err
 	}

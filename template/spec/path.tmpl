@@ -1,14 +1,23 @@
 {{- define "path_result_type" -}}
           {{- if .IsPrimitive }}
-            type: {{.SwaggerType}}
+            {{.PrefixSpace}}type: {{.SwaggerType}}
           {{- else if .IsReference }}
-            $ref: '#/definitions/{{.SwaggerType}}'
+            {{.PrefixSpace}}$ref: '#/definitions/{{.SwaggerType}}'
+          {{- else if .IsMap }}
+            {{.PrefixSpace}}type: object
+            {{.PrefixSpace}}additionalProperties:
           {{- end}}
+          {{- if .IsMap}}
+            {{- template "definition_field_type" .ItemSpec -}}
+          {{- else if eq .SwaggerType "array"}}
+            items:
+             {{- template "definition_field_type" .ItemSpec -}}
+          {{- end }}
           {{- if .HasFormat }}
-            format: {{.Format}}
+            {{.PrefixSpace}}format: {{.Format}}
           {{- end}}
           {{- if .Pointer }}
-            x-nullable: true
+            {{.PrefixSpace}}x-nullable: true
           {{- end}}
 {{- end }}
 

@@ -27,6 +27,7 @@ type FieldSpec struct {
 type TypeSpec struct {
 	IsPrimitive bool
 	IsMap       bool
+
 	IsReference bool
 	Pointer     bool
 
@@ -34,6 +35,7 @@ type TypeSpec struct {
 	HasFormat   bool
 	Format      string
 	ItemSpec    *TypeSpec
+	PrefixSpace string
 
 	ReferenceType *DefinitionSpec
 }
