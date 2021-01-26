@@ -16,6 +16,10 @@ import (
 type AnalysisOpt struct {
 	TargetFile string
 	ServerName string
+	Email      string
+	Contact    string
+
+	SpecificTypeParser func(typ reflect.Type) (TypeSpec, bool, error)
 }
 
 type RpcServiceAnalysis struct {
@@ -117,7 +121,7 @@ func (a *RpcServiceAnalysis) loadLocalPackage(packName string) (err error) {
 
 func (a *RpcServiceAnalysis) AppointService(services ...ServiceRegister) (err error) {
 	//existTypeSpes := make(map[string]DefinitionSpec)
-	specBuild := NewSpecBuilder()
+	specBuild := NewSpecBuilder(a.opt.SpecificTypeParser)
 
 	for _, service := range services {
 		//parse code
@@ -191,7 +195,8 @@ func (a *RpcServiceAnalysis) AppointService(services ...ServiceRegister) (err er
 
 func (a *RpcServiceAnalysis) Render() (err error) {
 	a.Spec.ServerName = a.opt.ServerName
-
+	a.Spec.Email = a.opt.Email
+	a.Spec.Contact = a.opt.Contact
 	tmplInst := template.New("set")
 	//tt.Parse()
 	//tmplInst, err := templates.ParseFiles("../../templates/spec/spec.tmpl",

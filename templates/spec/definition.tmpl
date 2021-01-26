@@ -33,7 +33,9 @@
 definitions:
 {{- range .Definitions }}
   {{ .ModelName}}:
+    {{- if ne (len .Properties) 0 }}
     properties:
+    {{- end }}
       {{- range  .Properties}}
       {{.Name}}:
         {{- template "definition_field_type" . -}}

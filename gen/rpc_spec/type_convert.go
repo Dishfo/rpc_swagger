@@ -2,6 +2,7 @@ package rpc_spec
 
 import (
 	"errors"
+	"log"
 	"reflect"
 )
 
@@ -68,35 +69,6 @@ type StructConvert struct {
 func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
 	var ret TypeSpec
 
-	var isStringer = isStringer(typ)
-
-	if isStringer && ctx.InOrOut == serializeOut {
-		ret.SwaggerType = "string"
-		ret.IsPrimitive = true
-		return ret, nil
-	}
-
-	ismarshal := isMarshal(typ)
-	isUnMarshal := isUnMarshal(typ)
-
-	if ctx.InOrOut == serializeOut && ismarshal {
-		ret.SwaggerType = "object"
-		ret.CustomMarshal = true
-		ret.IsPrimitive = true
-
-	}
-
-	if ctx.InOrOut == serializeIn && isUnMarshal {
-		ret.SwaggerType = "object"
-		ret.CustomUnMarshal = true
-		ret.IsPrimitive = true
-
-	}
-
-	if isUnMarshal || ismarshal {
-		return ret, nil
-	}
-
 	if typ.String() == "time.Time" {
 		ret.Format = "date-time"
 		ret.HasFormat = true
@@ -105,15 +77,39 @@ func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (T
 		return ret, nil
 	}
 
+	var isStringer = isStringer(typ)
+
+	if isStringer && ctx.InOrOut == serializeOut {
+		ret.SwaggerType = "string"
+		ret.IsPrimitive = true
+		return ret, nil
+	}
+
+	isMarshal := isMarshal(typ)
+	isUnMarshal := isUnMarshal(typ)
+
+	ret.CustomUnMarshal = isUnMarshal
+	ret.CustomMarshal = isMarshal
+
 	ret.IsReference = true
-	ret.SwaggerType = TypeName(typ)
+	if typ.Name() == "" {
+		log.Println("Anonymous")
+		ret.SwaggerType = ctx.NamePrefix
+	} else {
+		ret.SwaggerType = TypeName(typ)
+	}
 
 	if ctx.NeedRegisterModel && !ctx.CheckModelExist(ret.SwaggerType) {
 		//parse model
 		var definitionSpec DefinitionSpec
 		definitionSpec.Pkg = typ.PkgPath()
 		definitionSpec.GoTypeName = typ.Name()
-		definitionSpec.ModelName = TypeName(typ)
+		if typ.Name() == "" {
+			log.Println("Anonymous")
+			definitionSpec.ModelName = ctx.NamePrefix
+		} else {
+			definitionSpec.ModelName = TypeName(typ)
+		}
 
 		fieldNum := typ.NumField()
 		for i := 0; i < fieldNum; i++ {
@@ -123,24 +119,47 @@ func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (T
 			}
 			newCtx := ctx
 			newCtx.Anonymous = fieldType.Anonymous
+			if !newCtx.Anonymous {
+				newCtx.NamePrefix = definitionSpec.ModelName + "." + fieldType.Name
+			}
 
 			fieldTypeSpec, err := ctx.AnalysisProxy(newCtx, fieldType.Type)
 			if err != nil {
 				return TypeSpec{}, err
 			}
 
-			fieldSpec := FieldSpec{
-				TypeSpec: fieldTypeSpec,
-				Name:     fieldType.Name,
+			if !fieldType.Anonymous {
+				fieldSpec := FieldSpec{
+					TypeSpec: fieldTypeSpec,
+					Name:     fieldType.Name,
+				}
+				definitionSpec.Properties = append(definitionSpec.Properties, fieldSpec)
+			} else {
+				definitionSpec.Properties = append(definitionSpec.Properties, getAnonymousFields(fieldTypeSpec)...)
 			}
-
-			definitionSpec.Properties = append(definitionSpec.Properties, fieldSpec)
 		}
 
 		ret.ReferenceType = &definitionSpec
+	} else {
+		ret.ReferenceType = ctx.GetModel(ret.SwaggerType)
+	}
+
+	if ret.IsReference {
+		if ret.ReferenceType == nil || len(ret.ReferenceType.Properties) == 0 {
+			ret.IsReference = false
+			ret.IsPrimitive = true
+			ret.SwaggerType = "object"
+		}
 	}
 
 	return ret, nil
+}
+
+func getAnonymousFields(fieldSpec TypeSpec) []FieldSpec {
+	if fieldSpec.IsReference && fieldSpec.ReferenceType != nil {
+		return fieldSpec.ReferenceType.Properties
+	}
+	return []FieldSpec{}
 }
 
 type MapConvert struct {
@@ -196,5 +215,29 @@ func (a *ArrayConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (Ty
 
 	ret.ItemSpec = &itemTypeSpec
 
+	return ret, nil
+}
+
+type PtrConvert struct {
+}
+
+func (p *PtrConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
+	var ret TypeSpec
+	var isStringer = isStringer(typ)
+
+	if isStringer && ctx.InOrOut == serializeOut {
+		ret.SwaggerType = "string"
+		ret.IsPrimitive = true
+		return ret, nil
+	}
+
+	realType := indirectType(typ)
+	ret, err := ctx.AnalysisProxy(ctx, realType)
+	log.Println("is a pointer ")
+	if err != nil {
+		log.Printf("parse ptr type %s failed :%s", typ.String(), err.Error())
+		return TypeSpec{}, err
+	}
+	ret.Pointer = true
 	return ret, nil
 }

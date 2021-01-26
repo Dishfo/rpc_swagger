@@ -48,6 +48,8 @@ type Spec struct {
 	Paths       []PathSpec
 	Definitions []DefinitionSpec
 	ServerName  string
+	Email       string
+	Contact     string
 }
 
 type ServiceFunction struct {

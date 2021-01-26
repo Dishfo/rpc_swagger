@@ -10,7 +10,8 @@ import (
 )
 
 type PathSpecBuilder struct {
-	center *SpecBuilder
+	center             *SpecBuilder
+	specificTypeParser func(typ reflect.Type) (TypeSpec, bool, error)
 
 	serviceName string
 	methodName  string
@@ -73,6 +74,10 @@ func (b *PathSpecBuilder) SetMethod(method string) *PathSpecBuilder {
 }
 
 func (b *PathSpecBuilder) AppendParam(name string, typ reflect.Type) *PathSpecBuilder {
+	if typ.String() == "context.Context" && len(b.paramsNames) == 0 {
+		return b
+	}
+
 	b.paramsNames = append(b.paramsNames, name)
 	b.paramsTypes = append(b.paramsTypes, typ)
 
@@ -95,8 +100,8 @@ func (b *PathSpecBuilder) SetResult(name string, typ reflect.Type) *PathSpecBuil
 		InOrOut:           serializeOut,
 		NeedRegisterModel: true,
 		CheckModelExist:   b.checkDefinitionExist,
-
-		AnalysisProxy: b.analysisType,
+		GetModel:          b.getModelDefinition,
+		AnalysisProxy:     b.analysisType,
 	}
 
 	typeSpec, err := b.analysisType(ctx, typ)
@@ -134,13 +139,15 @@ const (
 )
 
 type AnalysisContext struct {
-	Ctx       context.Context
-	Anonymous bool
-	IsPointer bool
-	InOrOut   serializeType //1 ==in 2 == out
+	Ctx        context.Context
+	Anonymous  bool
+	NamePrefix string
+	IsPointer  bool
+	InOrOut    serializeType //1 ==in 2 == out
 
 	NeedRegisterModel bool
 	CheckModelExist   func(string) bool //can't be nil if NeedRegisterModel equal true
+	GetModel          func(string) *DefinitionSpec
 
 	//for more complex inner model
 	AnalysisProxy func(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error)
@@ -156,13 +163,21 @@ func (b *PathSpecBuilder) checkDefinitionExist(name string) bool {
 	return b.center.ExistDefinition(name)
 }
 
+func (b *PathSpecBuilder) getModelDefinition(modelName string) *DefinitionSpec {
+	return b.center.GetDefinition(modelName)
+}
+
 func (b *PathSpecBuilder) analysisType(ctx AnalysisContext, typ reflect.Type) (TypeSpec, error) {
-	typKind := typ.Kind()
 
 	var realType reflect.Type = typ
-	if typKind == reflect.Ptr {
-		ctx.IsPointer = true
-		realType = indirectType(typ)
+	if b.specificTypeParser != nil {
+		ret, hit, err := b.specificTypeParser(typ)
+		if err != nil {
+			return TypeSpec{}, err
+		}
+		if hit {
+			return ret, nil
+		}
 	}
 
 	kindType := typeMerge(realType.Kind())
@@ -177,9 +192,8 @@ func (b *PathSpecBuilder) analysisType(ctx AnalysisContext, typ reflect.Type) (T
 		log.Printf("can't handle this case %s %s", err.Error(), typ.String())
 		return TypeSpec{}, err
 	}
-	typeSpec.Pointer = ctx.IsPointer
 
-	if typeSpec.IsReference && ctx.NeedRegisterModel {
+	if typeSpec.IsReference && ctx.NeedRegisterModel && !ctx.Anonymous {
 		if typeSpec.ReferenceType != nil && !b.center.ExistDefinition(typeSpec.SwaggerType) {
 			b.center.AppendDefinitions(*typeSpec.ReferenceType)
 		}
@@ -200,8 +214,8 @@ func (b *PathSpecBuilder) analysisParamType(name string, typ reflect.Type) {
 
 		NeedRegisterModel: true,
 		CheckModelExist:   b.checkDefinitionExist,
-
-		AnalysisProxy: b.analysisType,
+		GetModel:          b.getModelDefinition,
+		AnalysisProxy:     b.analysisType,
 	}
 
 	typeSpec, err := b.analysisType(ctx, typ)
@@ -225,6 +239,7 @@ var (
 		4: &InterfaceConvert{}, //interface
 		5: &StructConvert{},    //struct
 		6: &BoolConvert{},      //bool
+		7: &PtrConvert{},       //ptr
 	}
 )
 
@@ -244,6 +259,8 @@ func typeMerge(kind reflect.Kind) int {
 		return 4
 	case reflect.Struct == kind:
 		return 5
+	case reflect.Ptr == kind:
+		return 7
 	}
 	return -1
 }

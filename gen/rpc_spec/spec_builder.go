@@ -1,19 +1,24 @@
 package rpc_spec
 
+import "reflect"
+
 type SpecBuilder struct {
-	Definitions map[string]DefinitionSpec
-	Paths       []PathSpec
+	Definitions        map[string]DefinitionSpec
+	Paths              []PathSpec
+	specificTypeParser func(typ reflect.Type) (TypeSpec, bool, error)
 }
 
-func NewSpecBuilder() *SpecBuilder {
+func NewSpecBuilder(SpecificTypeParser func(typ reflect.Type) (TypeSpec, bool, error)) *SpecBuilder {
 	return &SpecBuilder{
-		Definitions: map[string]DefinitionSpec{},
+		Definitions:        map[string]DefinitionSpec{},
+		specificTypeParser: SpecificTypeParser,
 	}
 }
 
 func (b *SpecBuilder) ChildPathBuilder() *PathSpecBuilder {
 	inst := &PathSpecBuilder{
-		center: b,
+		center:             b,
+		specificTypeParser: b.specificTypeParser,
 	}
 	return inst
 }
@@ -35,8 +40,16 @@ func (b *SpecBuilder) AppendDefinitions(spec DefinitionSpec) {
 }
 
 func (b *SpecBuilder) ExistDefinition(name string) bool {
+	_, exist := b.Definitions[name]
+	return exist
+}
 
-	return false
+func (b *SpecBuilder) GetDefinition(name string) *DefinitionSpec {
+	def, exist := b.Definitions[name]
+	if !exist {
+		return nil
+	}
+	return &def
 }
 
 func (b *SpecBuilder) AppendPath(spec PathSpec) {
