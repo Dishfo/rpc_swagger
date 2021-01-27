@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 func indirectType(typ reflect.Type) reflect.Type {
@@ -53,8 +54,14 @@ func isUnMarshal(typ reflect.Type) bool {
 
 func FieldName(fieldType reflect.StructField) string {
 	val := fieldType.Tag.Get("json")
+	if val == "-" {
+		return fieldType.Name
+	}
 	if len(val) > 0 {
-		return val
+		tagItems := strings.Split(val, ",")
+		if tagItems[0] != "-" {
+			return tagItems[0]
+		}
 	}
 
 	return fieldType.Name
