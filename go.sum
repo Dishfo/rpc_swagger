@@ -1,6 +1,8 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Dishfo/wire_dao v0.0.0-20210126133834-aa7e63e2af78 h1:DxyIej/TBrRYgRaphBBXN45WJFQokWFGQSz7AActJP0=
 github.com/Dishfo/wire_dao v0.0.0-20210126133834-aa7e63e2af78/go.mod h1:3St4NRDJXaQKEskxIN1NLJ69+KkSn8SZW0xGAWciioI=
+github.com/Dishfo/wire_dao v0.0.0-20210127081450-eca1eb7bcc7a h1:geccwoefCZwvkFXsmFL/N13kFBQJVMxH1g8j/MP2VE8=
+github.com/Dishfo/wire_dao v0.0.0-20210127081450-eca1eb7bcc7a/go.mod h1:3St4NRDJXaQKEskxIN1NLJ69+KkSn8SZW0xGAWciioI=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
