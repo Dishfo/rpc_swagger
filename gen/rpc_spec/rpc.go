@@ -104,10 +104,17 @@ func (a *RpcServiceAnalysis) loadLocalPackage(packName string) (err error) {
 	}
 
 	goPath := os.Getenv("GOPATH")
+	paths := strings.Split(goPath, ":")
 
-	scanner, err := gen_dao.ScanFiles(&gen_dao.ScanConfig{
-		TopDir: filepath.Join(goPath, "src", packName),
-	})
+	var scanner *gen_dao.Scanner
+	for _, path := range paths {
+		scanner, err = gen_dao.ScanFiles(&gen_dao.ScanConfig{
+			TopDir: filepath.Join(path, "src", packName),
+		})
+		if err == nil {
+			break
+		}
+	}
 
 	if err != nil {
 		log.Printf("create scanner failed :%s", err.Error())
