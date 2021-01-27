@@ -50,3 +50,12 @@ func isUnMarshal(typ reflect.Type) bool {
 
 	return typ.Implements(reflect.TypeOf(stringer).Elem())
 }
+
+func FieldName(fieldType reflect.StructField) string {
+	val := fieldType.Tag.Get("json")
+	if len(val) > 0 {
+		return val
+	}
+
+	return fieldType.Name
+}

@@ -131,7 +131,7 @@ func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (T
 			if !fieldType.Anonymous {
 				fieldSpec := FieldSpec{
 					TypeSpec: fieldTypeSpec,
-					Name:     fieldType.Name,
+					Name:     FieldName(fieldType),
 				}
 				definitionSpec.Properties = append(definitionSpec.Properties, fieldSpec)
 			} else {
