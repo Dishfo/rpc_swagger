@@ -14,12 +14,14 @@ import (
 )
 
 type AnalysisOpt struct {
-	TargetFile string
-	ServerName string
+	TargetFile string //result will be write to this file,must be absolute path
+	ServerName string //rpc server name
 	Email      string
 	Contact    string
 
-	SpecificTypeParser func(typ reflect.Type) (TypeSpec, bool, error)
+	SpecificTypeParser func(typ reflect.Type) (TypeSpec, bool, error) //type parse proxy
+
+	ConvertFuncComment bool //need to convert function comment to path description
 }
 
 type RpcServiceAnalysis struct {
@@ -52,8 +54,8 @@ func (a *RpcServiceAnalysis) parseParams(params []reflect.Type) (ret DefinitionS
 	return
 }
 
-func (a *RpcServiceAnalysis) getFunctionParamName(sf ServiceFunction) ([]string, bool) {
-
+func (a *RpcServiceAnalysis) getFunctionMetaData(sf ServiceFunction) (FunctionMetaData, bool) {
+	var ret FunctionMetaData
 	var scan *gen_dao.Scanner
 	//find scanner
 	for pack, scanner := range a.scanners {
@@ -70,7 +72,7 @@ func (a *RpcServiceAnalysis) getFunctionParamName(sf ServiceFunction) ([]string,
 
 	if scan == nil {
 		log.Printf("can't %s pack", sf.Package)
-		return nil, false
+		return ret, false
 	}
 
 	funcDesc, err := scan.FindFunction(gen_dao.FunctionID{
@@ -80,15 +82,16 @@ func (a *RpcServiceAnalysis) getFunctionParamName(sf ServiceFunction) ([]string,
 	})
 	if err != nil {
 		log.Printf("can't find function %s because of %s", sf.String(), err.Error())
-		return nil, false
+		return ret, false
 	}
 
 	var paramNames []string
 	for _, param := range funcDesc.Params {
 		paramNames = append(paramNames, param.Name)
 	}
-
-	return paramNames, true
+	ret.ParamNames = paramNames
+	ret.Comments = funcDesc.Comments
+	return ret, true
 }
 
 func (a *RpcServiceAnalysis) loadLocalPackage(packName string) (err error) {
@@ -165,16 +168,18 @@ func (a *RpcServiceAnalysis) AppointService(services ...ServiceRegister) (err er
 			}
 
 			//get params name
-			paramNames, _ = a.getFunctionParamName(ServiceFunction{
+			funcMetaData, _ := a.getFunctionMetaData(ServiceFunction{
 				Service:  indirectRt.Name(),
 				Function: methodType.Name,
 				Package:  indirectRt.PkgPath(),
 			})
 
-			for k, name := range paramNames {
+			for k, name := range funcMetaData.ParamNames {
 				builder.AppendParam(name, paramTypes[k])
 			}
-
+			if a.opt.ConvertFuncComment {
+				builder.SetDescription(funcMetaData.Comments)
+			}
 			log.Println("params names ", paramNames)
 
 			for k := 0; k < resultNum; k++ {

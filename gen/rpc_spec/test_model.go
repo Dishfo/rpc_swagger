@@ -37,7 +37,10 @@ type TestT2 struct {
 //func (t TestT) String() string {
 //	panic("implement me")
 //}
-
+/** get data by id,
+write some
+ok
+*/
 func (s *TestService) GetByID(companyId, id *string) (*TestT, error) {
 
 	return nil, nil

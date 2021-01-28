@@ -21,6 +21,7 @@ type PathSpecBuilder struct {
 
 	paramFields []FieldSpec
 	resultSpec  TypeSpec
+	description string
 
 	errs []error
 
@@ -43,7 +44,7 @@ func (b *PathSpecBuilder) Build() PathSpec {
 		b.result.ResultList = &b.resultSpec
 		b.result.HasRes = true
 	}
-
+	b.result.Description = b.description
 	b.center.AppendPath(b.result)
 
 	return b.result
@@ -87,6 +88,12 @@ func (b *PathSpecBuilder) AppendParam(name string, typ reflect.Type) *PathSpecBu
 	// it's struct should create definition spec and register to center
 
 	b.analysisParamType(name, typ)
+	return b
+}
+
+func (b *PathSpecBuilder) SetDescription(comments []string) *PathSpecBuilder {
+	b.description = PackingDescription(comments)
+
 	return b
 }
 

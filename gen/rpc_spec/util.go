@@ -66,3 +66,21 @@ func FieldName(fieldType reflect.StructField) string {
 
 	return fieldType.Name
 }
+
+func PackingDescription(comments []string) string {
+	var builder strings.Builder
+	for _, comment := range comments {
+		tmp := strings.TrimLeft(comment, "//")
+		tmp = strings.TrimRight(tmp, "\n")
+		tmp = strings.TrimLeft(tmp, "/*")
+		tmp = strings.TrimRight(tmp, "*/")
+		tmp = strings.TrimSpace(tmp)
+		builder.WriteString(tmp)
+		builder.WriteRune(' ')
+	}
+
+	res := builder.String()
+	res = strings.TrimLeft(res, "/*")
+	res = strings.TrimRight(res, "*/")
+	return strings.ReplaceAll(strings.TrimSpace(res), "\n", " ")
+}

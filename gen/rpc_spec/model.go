@@ -10,6 +10,7 @@ type PathSpec struct {
 	ParamSpec        DefinitionSpec
 	ResultList       *TypeSpec
 	HasRes           bool
+	Description      string
 }
 
 type DefinitionSpec struct {
@@ -60,4 +61,9 @@ type ServiceFunction struct {
 
 func (m *ServiceFunction) String() string {
 	return fmt.Sprintf("%s.%s.%s", m.Package, m.Service, m.Function)
+}
+
+type FunctionMetaData struct {
+	Comments   []string
+	ParamNames []string
 }

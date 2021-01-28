@@ -29,6 +29,9 @@ paths:
       consumes:
         - application/json
       operationId: {{.RpcServiceMethod}}
+      {{- if ne .Description "" }}
+      description: {{.Description}}
+      {{- end }}
       parameters:
         - in: body
           name: ParamList

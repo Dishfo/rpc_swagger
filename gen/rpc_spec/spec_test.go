@@ -39,8 +39,9 @@ func TestRpcServiceAnalysis_LoadServiceFunction(t *testing.T) {
 
 func TestRpcServiceAnalysis_AppointService(t *testing.T) {
 	inst := NewRpcServiceAnalysis(&AnalysisOpt{
-		ServerName: "EmptyServer",
-		TargetFile: "/home/dishfo/go/src/github.com/Dishfo/rpc_swagger/test.yaml",
+		ServerName:         "EmptyServer",
+		TargetFile:         "/home/dishfo/go/src/github.com/Dishfo/rpc_swagger/test.yaml",
+		ConvertFuncComment: true,
 	})
 	inst.AppointService(ServiceRegister{
 		RegisterName: "test",
