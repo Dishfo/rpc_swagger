@@ -36,8 +36,8 @@ func (b *PathSpecBuilder) Build() PathSpec {
 	b.result.ParamSpec.Properties = b.paramFields
 
 	if len(b.paramFields) > 0 {
-		b.center.AppendDefinitions(b.result.ParamSpec)
 		b.result.ParamSpec.ModelName = fmt.Sprintf("%s%sParamList", b.serviceName, b.methodName)
+		b.center.AppendDefinitions(b.result.ParamSpec)
 	}
 	if b.resultType != nil {
 		b.result.ResultList = &b.resultSpec
