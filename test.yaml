@@ -46,7 +46,7 @@ paths:
           name: ParamList
           required: true
           schema:
-            $ref: '#/definitions/testGetByIDsParamList'
+            type: object
       responses:
         '200':
           description: success

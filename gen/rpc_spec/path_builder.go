@@ -33,10 +33,12 @@ func (b *PathSpecBuilder) Build() PathSpec {
 	b.result.RpcServiceMethod = fmt.Sprintf("%s_%s", b.serviceName, parselizeMethodName(b.methodName))
 	b.result.RpcPath = fmt.Sprintf("%s/%s", b.serviceName, b.methodName)
 
-	b.result.ParamSpec.ModelName = fmt.Sprintf("%s%sParamList", b.serviceName, b.methodName)
 	b.result.ParamSpec.Properties = b.paramFields
 
-	b.center.AppendDefinitions(b.result.ParamSpec)
+	if len(b.paramFields) > 0 {
+		b.center.AppendDefinitions(b.result.ParamSpec)
+		b.result.ParamSpec.ModelName = fmt.Sprintf("%s%sParamList", b.serviceName, b.methodName)
+	}
 	if b.resultType != nil {
 		b.result.ResultList = &b.resultSpec
 		b.result.HasRes = true

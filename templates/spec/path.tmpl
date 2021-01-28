@@ -24,7 +24,7 @@
 {{ define "path" }}
 paths:
 {{- range .Paths}}
-  /rpc/{{.RpcPath}}:
+  /jsonrpc/{{.RpcPath}}:
     post:
       consumes:
         - application/json
@@ -33,8 +33,14 @@ paths:
         - in: body
           name: ParamList
           required: true
+          {{- if ne (len .ParamSpec.Properties) 0 }}
           schema:
             $ref: '#/definitions/{{.ParamSpec.ModelName}}'
+          {{- else  }}
+          schema:
+            type: object
+            x-empty-params: true
+          {{- end}}
       responses:
         '200':
           description: success
