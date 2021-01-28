@@ -104,6 +104,7 @@ func (b *PathSpecBuilder) SetResult(name string, typ reflect.Type) *PathSpecBuil
 		CheckModelExist:   b.checkDefinitionExist,
 		GetModel:          b.getModelDefinition,
 		AnalysisProxy:     b.analysisType,
+		occurType:         map[string]bool{},
 	}
 
 	typeSpec, err := b.analysisType(ctx, typ)
@@ -143,6 +144,7 @@ const (
 type AnalysisContext struct {
 	Ctx        context.Context
 	Anonymous  bool
+	occurType  map[string]bool
 	NamePrefix string
 	IsPointer  bool
 	InOrOut    serializeType //1 ==in 2 == out
@@ -218,6 +220,7 @@ func (b *PathSpecBuilder) analysisParamType(name string, typ reflect.Type) {
 		CheckModelExist:   b.checkDefinitionExist,
 		GetModel:          b.getModelDefinition,
 		AnalysisProxy:     b.analysisType,
+		occurType:         map[string]bool{},
 	}
 
 	typeSpec, err := b.analysisType(ctx, typ)

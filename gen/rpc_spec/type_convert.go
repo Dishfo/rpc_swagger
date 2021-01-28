@@ -98,9 +98,12 @@ func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (T
 	} else {
 		ret.SwaggerType = TypeName(typ)
 	}
+	toParsed := false
 
-	if ctx.NeedRegisterModel && !ctx.CheckModelExist(ret.SwaggerType) {
+	if ctx.NeedRegisterModel && !ctx.CheckModelExist(ret.SwaggerType) && !ctx.occurType[typ.String()] {
 		//parse model
+		toParsed = true
+		ctx.occurType[typ.String()] = true
 		var definitionSpec DefinitionSpec
 		definitionSpec.Pkg = typ.PkgPath()
 		definitionSpec.GoTypeName = typ.Name()
@@ -140,7 +143,9 @@ func (s *StructConvert) GetSwaggerType(ctx AnalysisContext, typ reflect.Type) (T
 		}
 
 		ret.ReferenceType = &definitionSpec
-	} else {
+	}
+
+	if !toParsed {
 		ret.ReferenceType = ctx.GetModel(ret.SwaggerType)
 	}
 
