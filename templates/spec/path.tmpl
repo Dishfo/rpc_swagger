@@ -30,7 +30,7 @@ paths:
         - application/json
       operationId: {{.RpcServiceMethod}}
       {{- if ne .Description "" }}
-      description: {{.Description}}
+      description: "{{.Description}}"
       {{- end }}
       parameters:
         - in: body
